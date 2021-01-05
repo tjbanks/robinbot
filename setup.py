@@ -23,6 +23,7 @@ setup(
         'networkx',
         'numpy',
         'pandas',
+        'robin_stocks',
         'questionary'
     ],
     classifiers=[
