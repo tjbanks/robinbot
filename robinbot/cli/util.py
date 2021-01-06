@@ -33,21 +33,23 @@ cli.add_command(ai)
 @click.option('-t', '--sql-table', type=click.STRING, default="", help="sql table to select the data from")
 @click.option('-x', '--x-columns', type=click.STRING, default="", help="comma separated input columns [eg:col1,col2,etc.]")
 @click.option('-y', '--y-columns', type=click.STRING, default="", help="comma separated output columns")
-@click.option('-d', '--datetime-column', type=click.STRING, default="", help="datetime column")
-@click.option('-f', '--datetime-format', type=click.STRING, default="%Y-%m-%d %H:%M:%S", default="%Y-%m-%d %H:%M:%S")
-@click.option('-o', '--output-prefix', type=click.STRING, default="", help="output model filename prefix")
+@click.option('-d', '--timestamp-column', type=click.STRING, default="timestamp", help="timestamp column")
+@click.option('-f', '--timestamp-format', type=click.STRING, default="%Y-%m-%d %H:%M:%S", help="%Y-%m-%d %H:%M:%S")
 @click.pass_context
-def train(ctx,csv,sqlite,sql_table,x_columns,y_columns,datetime_column, \
-                datetime_format, output_prefix):
+def train(ctx,csv,sqlite,sql_table,x_columns,y_columns,timestamp_column, \
+                timestamp_format):
     logger = ctx.obj['logger'] = logging.getLogger('robinbot.cli.util.ai.train')
     logger.info("Training model")
 
     data = DataRepository()
+    x = x_columns.split(',')
+    y = y_columns.split(',')
 
     if len(csv):
         logger.info("Reading csv file \"" + csv +"\"")
-        data.load_csv(csv,x_columns,y_columns,datetime_column=datetime_column, \
-                        datetime_format=datetime_format)
+        
+        data.load_csv(csv,x,y,timestamp_column=timestamp_column, \
+                        timestamp_format=timestamp_format)
     elif len(sqlite):
         logger.warning("SQLite data source not implemented. Quitting.")
         sys.exit(1)
@@ -58,8 +60,9 @@ def train(ctx,csv,sqlite,sql_table,x_columns,y_columns,datetime_column, \
     ctx.obj['data'] = data
 
 @train.command('lstm', help="train an LSTM model on provided data")
+@click.option('-o', '--output-prefix', type=click.STRING, default="", help="output model filename prefix")
 @click.pass_context
-def lstm(ctx):
+def lstm(ctx,output_prefix):
     logger = ctx.obj['logger'] = logging.getLogger('robinbot.cli.util.ai.train.lstm')
     logger.info('LSTM selected')
 

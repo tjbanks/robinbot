@@ -24,7 +24,8 @@ setup(
         'numpy',
         'pandas',
         'robin_stocks',
-        'questionary'
+        'questionary',
+        'tqdm'
     ],
     classifiers=[
         'Intended Audience :: Developers',

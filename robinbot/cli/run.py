@@ -46,7 +46,7 @@ def recorder(ctx):
     def record(sc):
         nonlocal i
         temp = bot.get_crypto_quote()
-        temp['time'] = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+        temp['timestamp'] = strftime("%Y-%m-%d %H:%M:%S", gmtime())
         print(i)
         i = i + 1
         print(temp)
