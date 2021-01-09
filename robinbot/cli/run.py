@@ -17,12 +17,14 @@ def cli(ctx):
 @cli.command('trader', help="Run the trading algorithm specified by your configuration file")
 @click.option('-l','--logout', is_flag=True, default=False, help='logout at the end of run, disabled by default')
 @click.pass_context
-def cell(ctx,logout):
+def trader(ctx,logout):
     logger = logging.getLogger('robinbot.cli.run.trader')
     logger.debug('initializing trader bot')
 
+    username = ctx.obj['username']
+
     bot = RobinhoodCryptoBot('DOGE')
-    bot.login('username','')
+    bot.login(username,'')
 
     import pdb;pdb.set_trace()
 
@@ -35,8 +37,10 @@ def recorder(ctx):
     logger = logging.getLogger('robinbot.cli.run.recorder')
     logger.debug('initializing trader bot')
 
+    username = ctx.obj['username']
+
     bot = RobinhoodCryptoBot('DOGE')
-    bot.login('username','')
+    bot.login(username,'')
     
     i = 0
     rows = []
@@ -44,8 +48,12 @@ def recorder(ctx):
     s = sched.scheduler(time.time, time.sleep)
 
     def record(sc):
+        
         nonlocal i
         temp = bot.get_crypto_quote()
+
+        sc.enter(1, 1, record, (sc,))
+
         temp['timestamp'] = strftime("%Y-%m-%d %H:%M:%S", gmtime())
         print(i)
         i = i + 1
@@ -54,7 +62,7 @@ def recorder(ctx):
         if i % 10 == 0:
             df = pd.DataFrame.from_dict(rows,orient='columns')
             df.to_csv('DOGE.csv')
-        sc.enter(1, 1, record, (sc,))
+        
 
     s.enter(1, 1, record, (s,))
     s.run()
