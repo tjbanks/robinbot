@@ -188,8 +188,10 @@ class DataRepository():
         best_window = 0
         best_improvement = 0
 
-        for roll in range(10,90,4):
-            for window in range(10,90,4):
+        for roll in range(10,90,10):
+            for window in range(10,90,10):
+                self.logger.info('testing rolling mean val: ' + str(roll))
+                self.logger.info('testing label window: ' + str(window))
                 self.data['mark_price_avg'] = self.data.mark_price.rolling(window=roll).mean()
                 self.generate_labels('mark_price_avg',window_size=window)
                 improvement = self.simulate_return()
