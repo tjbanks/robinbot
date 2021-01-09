@@ -50,7 +50,7 @@ class DataRepository():
         raise Exception("Not implemented")
 
 
-    def generate_labels(self, col_name, ask, bid, window_size=11,inplace=True):
+    def generate_labels(self, col_name, window_size=11,inplace=True):
         """
         Data is labeled as per the logic in research paper
         Algorithmic Financial Trading with Deep Convolutional Neural Networks: Time Series to Image Conversion Approach
@@ -105,14 +105,100 @@ class DataRepository():
             return self.data
         return labels
 
-    def plot_labels(self):
+    def plot_labels(self,col_name='mark_price',labels_col='labels'):
         
-        zero = self.data[self.data['labels']==0]
-        one = self.data[self.data['labels']==1]
+        zero = self.data[self.data[labels_col]==0]
+        one = self.data[self.data[labels_col]==1]
 
         plt.scatter(zero.timestamp,zero.mark_price,color='red')
         plt.scatter(one.timestamp,one.mark_price,color='green')
 
-        plt.plot(self.data.timestamp,self.data.mark_price)
+        plt.plot(self.data.timestamp,self.data[col_name])
         plt.show()
         
+
+    def simulate_return(self,col_name='mark_price',num_coins=100000,buy_price_col='ask_price',sell_price_col='bid_price',label='labels'):
+
+        self.logger.info("simulating return")
+        row_counter = 0
+        total_rows = len(self.data)
+        pbar = tqdm(total=total_rows)
+
+        cash_held = 0
+        coin_count = 10000
+
+        price = self.data.iloc[0][col_name]
+        start_worth = cash_held + (coin_count*price)
+
+        self.logger.info("starting worth:" + str(start_worth))
+
+        while row_counter < total_rows:
+            
+            price = self.data.iloc[row_counter][col_name]
+            buy_price = self.data.iloc[row_counter][buy_price_col]
+            sell_price = self.data.iloc[row_counter][sell_price_col]
+
+            action = self.data.iloc[row_counter][label]
+
+            
+            old_worth = cash_held + (coin_count*price)
+
+            if action == 0: #Sell
+                if coin_count > 0:
+                    
+                    cash_held = (coin_count*sell_price)
+                    #self.logger.info("Selling coins:[" + str(coin_count) + "] for [" + str(cash_held) + "]")
+
+                    coin_count = 0
+                
+            elif action == 1: #Buy
+                if cash_held > 0:
+                    coin_count = (cash_held/buy_price)
+                    #self.logger.info("Buying coins:[" + str(coin_count) + "] for [" + str(cash_held) + "]")
+
+                    cash_held = 0
+            elif old_worth == 0:
+                break
+            else:
+                pass
+
+
+            current_worth = cash_held + (coin_count*price)
+
+            #if current_worth != old_worth:
+                #self.logger.info("current worth:" + str(current_worth))
+
+            row_counter = row_counter + 1
+            pbar.update(1)
+
+        pbar.close()
+        end_worth = cash_held + (coin_count*price)
+        self.logger.info("ending worth:" + str(end_worth))
+
+        hold_wait_strat = self.data.iloc[-1].mark_price / self.data.iloc[0].mark_price 
+        hold_wait_strat_val = hold_wait_strat * start_worth
+        self.logger.info("ending worth if held and waited:" + str(hold_wait_strat_val))
+        improvement = end_worth/start_worth - hold_wait_strat
+        self.logger.info("improvement: " + str(improvement))
+
+        return improvement
+
+    def find_best_return(self):
+        best_roll = 0
+        best_window = 0
+        best_improvement = 0
+
+        for roll in range(10,90,4):
+            for window in range(10,90,4):
+                self.data['mark_price_avg'] = self.data.mark_price.rolling(window=roll).mean()
+                self.generate_labels('mark_price_avg',window_size=window)
+                improvement = self.simulate_return()
+                
+                if improvement > best_improvement:
+                    best_improvement = improvement
+                    best_roll = roll
+                    best_window = window
+                    
+                self.logger.info('current best improvement: ' + str(best_improvement))
+                self.logger.info('current best roll: ' + str(best_roll))
+                self.logger.info('current best window: ' + str(best_window))
