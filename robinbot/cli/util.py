@@ -17,29 +17,18 @@ def generate_config(ctx,location):
     logger = ctx.obj['logger']
     logger.info("Function not yet implemented.")
 
-
-@click.group('ai', help='AI related functions')
-@click.pass_context
-def ai(ctx):
-    logger = ctx.obj['logger'] = logging.getLogger('robinbot.cli.util.ai')
-    pass
-
-cli.add_command(ai)
-
-
-@ai.group('train', help="train an AI model on provided data")
-@click.option('--csv', type=click.STRING, default="", help="read a csv for input data training")
-@click.option('--sqlite', type=click.STRING, default="", help="input columns")
+@click.group('data', help='Data related functions')
+@click.option('-c', '--csv', type=click.STRING, default="", help="read a csv for input data training")
+@click.option('-s', '--sqlite', type=click.STRING, default="", help="sqlite file to pull data from")
 @click.option('-t', '--sql-table', type=click.STRING, default="", help="sql table to select the data from")
-@click.option('-x', '--x-columns', type=click.STRING, default="", help="comma separated input columns [eg:col1,col2,etc.]")
-@click.option('-y', '--y-columns', type=click.STRING, default="", help="comma separated output columns")
+@click.option('-x', '--x-columns', type=click.STRING, default="ask_price,bid_price,mark_price,high_price,low_price", help="comma separated input columns [eg:col1,col2,etc.]")
+@click.option('-y', '--y-columns', type=click.STRING, default="labels", help="comma separated output columns")
 @click.option('-d', '--timestamp-column', type=click.STRING, default="timestamp", help="timestamp column")
 @click.option('-f', '--timestamp-format', type=click.STRING, default="%Y-%m-%d %H:%M:%S", help="%Y-%m-%d %H:%M:%S")
 @click.pass_context
-def train(ctx,csv,sqlite,sql_table,x_columns,y_columns,timestamp_column, \
+def data(ctx,csv,sqlite,sql_table,x_columns,y_columns,timestamp_column, \
                 timestamp_format):
-    logger = ctx.obj['logger'] = logging.getLogger('robinbot.cli.util.ai.train')
-    logger.info("Training model")
+    logger = ctx.obj['logger'] = logging.getLogger('robinbot.cli.util.data')
 
     data = DataRepository()
     x = x_columns.split(',')
@@ -58,6 +47,27 @@ def train(ctx,csv,sqlite,sql_table,x_columns,y_columns,timestamp_column, \
         sys.exit(1)
 
     ctx.obj['data'] = data
+
+    pass
+
+cli.add_command(data)
+
+
+@data.group('label', help="label provided data")
+@click.pass_context
+def label(ctx):
+    logger = ctx.obj['logger'] = logging.getLogger('robinbot.cli.util.data.label')
+    logger.info("Training model")
+
+    data = ctx.obj['data']
+
+
+@data.group('train', help="train an AI model on provided data")
+@click.pass_context
+def train(ctx):
+    logger = ctx.obj['logger'] = logging.getLogger('robinbot.cli.util.ai.train')
+    logger.info("Model training utility started")
+
 
 @train.command('lstm', help="train an LSTM model on provided data")
 @click.option('-o', '--output-prefix', type=click.STRING, default="", help="output model filename prefix")

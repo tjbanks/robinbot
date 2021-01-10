@@ -27,7 +27,16 @@ class DataRepository():
         self.timestamp_column = timestamp_column
         self.timestamp_format = timestamp_format
 
-        df = pd.read_csv(csv_path,usecols=x_columns+y_columns+[timestamp_column])
+        
+        # Make sure that the columns we're trying to load will be available
+        df = pd.read_csv(csv_path)
+
+        for col in x_columns + y_columns + [timestamp_column]:
+            if col not in list(df.columns):
+                self.logger.warning("'"+col+"' column not found in dataset. Continuing but this may cause problems later")        
+
+        #df = pd.read_csv(csv_path,usecols=x_columns+y_columns+[timestamp_column])
+
         df['timestamp'] = pd.to_datetime(df[timestamp_column],format=timestamp_format)
         if timestamp_column != 'timestamp':
             df.drop([timestamp_column],axis=1,inplace=True)
