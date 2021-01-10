@@ -6,6 +6,7 @@ from clint.textui import puts, colored, indent
 
 from . import run as run_commands
 from . import util as util_commands
+from . import data as data_commands
 
 @click.group()
 @click.option('-u','--username', default=None, help='the provided username to login to trading service')
@@ -47,6 +48,7 @@ def cli(ctx, username, disable_debug, log_file_location, disable_log_file):
 
 cli.add_command(run_commands.cli)
 cli.add_command(util_commands.cli)
+cli.add_command(data_commands.data)
 
 if __name__ == "__main__":
     cli()

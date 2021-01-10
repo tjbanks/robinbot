@@ -52,11 +52,26 @@ class DataRepository():
         self.data = df
         return
 
+    def write_csv(self,location=None):
+        loc = self._src_path
+
+        if location:
+            loc = location
+
+        self.data.to_csv(loc)
+
+        self.logger.info('data file written to ' + loc)
+
+
     def load_sqlite(self,sqlite_path,x_columns,y_columns,datetime_column, \
                     timestamp_format="%Y-%m-%d %H:%M:%S"):
         
         self._src_path = sqlite_path
         raise Exception("Not implemented")
+
+    def apply_rolling_mean(self, rolling_mean_window_size, col_name='mark_price', new_col_name='mark_price_avg'):
+
+        self.data[new_col_name] = self.data[col_name].rolling(window=rolling_mean_window_size).mean()
 
 
     def generate_labels(self, col_name, window_size=11,inplace=True):
