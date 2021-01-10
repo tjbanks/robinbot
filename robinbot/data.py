@@ -47,18 +47,18 @@ class DataRepository():
         prev_len = len(df)
         df.dropna(inplace=True)
         df.reset_index(drop=True, inplace=True)
-        self.logger.info("Dropped {0} nan rows before label calculation".format(prev_len - len(df)))
+        self.logger.info("Dropped {0} nan rows".format(prev_len - len(df)))
 
         self.data = df
         return
 
-    def write_csv(self,location=None):
+    def to_csv(self,location=None):
         loc = self._src_path
 
         if location:
             loc = location
 
-        self.data.to_csv(loc)
+        self.data.to_csv(loc,index=False)
 
         self.logger.info('data file written to ' + loc)
 

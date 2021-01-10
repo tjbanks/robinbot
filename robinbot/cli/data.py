@@ -3,6 +3,7 @@ import logging
 import os,sys
 
 from robinbot.data import DataRepository
+from robinbot.ml import LSTMNet
 
 @click.group('data', help='Data related functions')
 @click.option('-c', '--csv', type=click.STRING, default="", help="read a csv for input data training")
@@ -85,5 +86,8 @@ def lstm(ctx,output_prefix):
     logger.info('LSTM selected')
 
     data = ctx.obj['data']
+
+    lstm = LSTMNet()
+
     import pdb;pdb.set_trace()
 
