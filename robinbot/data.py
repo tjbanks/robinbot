@@ -18,6 +18,14 @@ class DataRepository():
         self.logger = logging.getLogger('robinbot.data.DataRepository')
         return
 
+    @property
+    def x(self):
+        return self.data[self.x_columns]
+
+    @property
+    def y(self):
+        return self.data[self.y_columns]
+
     def load_csv(self,csv_path,x_columns,y_columns,timestamp_column="", \
                     timestamp_format="%Y-%m-%d %H:%M:%S"):
 

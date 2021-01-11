@@ -88,6 +88,6 @@ def lstm(ctx,output_prefix):
     data = ctx.obj['data']
 
     lstm = LSTMNet()
-
-    import pdb;pdb.set_trace()
+    
+    lstm.train(data)
 
