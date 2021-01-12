@@ -38,9 +38,6 @@ def data(ctx,csv,sqlite,sql_table,x_columns,y_columns,timestamp_column, \
 
     pass
 
-
-
-
 @data.group('label', help="label provided data")
 @click.option('-o', '--output-file',  default=None, help='specify an alternate output location [default: overwrite current file]')
 @click.pass_context
@@ -72,22 +69,33 @@ def label_default(ctx,column_name,rolling_mean,window_size):
 
 
 @data.group('train', help="train an AI model on provided data")
+@click.option('-b','--batch-size', type=click.INT, default=50, help="batch size of training if applicable [default: 50]")
+@click.option('-e','--epochs', type=click.INT, default=20, help="number of epochs for training if applicable [default: 20]")
 @click.pass_context
-def train(ctx):
+def train(ctx, batch_size, epochs):
     logger = ctx.obj['logger'] = logging.getLogger('robinbot.cli.data.train')
     logger.info("Model training utility started")
+
+    ctx.obj['batch_size'] = batch_size
+    ctx.obj['epochs'] = epochs
 
 
 @train.command('lstm', help="train an LSTM model on provided data")
 @click.option('-o', '--output-prefix', type=click.STRING, default="", help="output model filename prefix")
+@click.option('-l','--lookback', type=click.INT, default=120, help="how far back should the lstm be trained to look back on [default: 120]")
+@click.option('-s','--lookback-skip', type=click.INT, default=1, help="skip values for lookback to reduce the amount of input data [default: 1]")
+@click.option('-h', '--every-other-hold', type=click.INT, default=30, help="only train using every other n \"hold\" values [default: 30]")
 @click.pass_context
-def lstm(ctx,output_prefix):
+def lstm(ctx,output_prefix, lookback, lookback_skip, every_other_hold):
     logger = ctx.obj['logger'] = logging.getLogger('robinbot.cli.util.data.train.lstm')
     logger.info('LSTM selected')
 
     data = ctx.obj['data']
+    batch_size = ctx.obj['batch_size']
+    epochs = ctx.obj['epochs']
 
     lstm = LSTMNet()
     
-    lstm.train(data)
+    lstm.train(data,lookback=lookback, lookback_skip=lookback_skip, every_other_hold=every_other_hold,
+                epochs=epochs, batch_size=batch_size)
 

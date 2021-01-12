@@ -8,12 +8,13 @@ import matplotlib.pyplot as plt
 
 class DataRepository():
 
-    def __init__(self):
-        self._src_path = None
-        self.data = None
-        self.x_columns = None
-        self.y_columns = None
-        self.timestamp_column = None
+    def __init__(self, data=None, x_columns=None, y_columns=None,
+                    timestamp_column=None, src_path=None):
+        self.data = data
+        self.x_columns = x_columns
+        self.y_columns = y_columns
+        self.timestamp_column = timestamp_column
+        self.src_path = src_path
 
         self.logger = logging.getLogger('robinbot.data.DataRepository')
         return
@@ -26,10 +27,24 @@ class DataRepository():
     def y(self):
         return self.data[self.y_columns]
 
+    def resample_hold(self,every_other=30):
+        """
+        Similar to pandas.resample
+        Keeps all buy/sell cases but only grabs every_other hold
+
+        """
+        new_data = pd.concat([self.data.iloc[::every_other],
+                                self.data[self.data.labels==0],
+                                self.data[self.data.labels==1]]).drop_duplicates()
+
+        return DataRepository(data=new_data, x_columns=self.x_columns, y_columns=self.y_columns,
+                timestamp_column=self.timestamp_column, src_path=self.src_path)
+    
+
     def load_csv(self,csv_path,x_columns,y_columns,timestamp_column="", \
                     timestamp_format="%Y-%m-%d %H:%M:%S"):
 
-        self._src_path = csv_path
+        self.src_path = csv_path
         self.x_columns = x_columns
         self.y_columns = y_columns
         self.timestamp_column = timestamp_column
@@ -61,7 +76,7 @@ class DataRepository():
         return
 
     def to_csv(self,location=None):
-        loc = self._src_path
+        loc = self.src_path
 
         if location:
             loc = location
@@ -74,7 +89,7 @@ class DataRepository():
     def load_sqlite(self,sqlite_path,x_columns,y_columns,datetime_column, \
                     timestamp_format="%Y-%m-%d %H:%M:%S"):
         
-        self._src_path = sqlite_path
+        self.src_path = sqlite_path
         raise Exception("Not implemented")
 
     def apply_rolling_mean(self, rolling_mean_window_size, col_name='mark_price', new_col_name='mark_price_avg'):
@@ -137,15 +152,24 @@ class DataRepository():
             return self.data
         return labels
 
-    def plot_labels(self,col_name='mark_price',labels_col='labels'):
+    def plot_labels(self,col_name='mark_price',labels_col='labels',label_indicies=None):
         
-        zero = self.data[self.data[labels_col]==0]
-        one = self.data[self.data[labels_col]==1]
+        data = self.data
+
+        if label_indicies:
+            data = self.data.iloc[label_indicies]
+
+        zero = data[data[labels_col]==0]
+        one = data[data[labels_col]==1]
+        two = data[data[labels_col]==2]
+                    
+
+        plt.plot(self.data.timestamp,self.data[col_name])
 
         plt.scatter(zero.timestamp,zero.mark_price,color='red')
         plt.scatter(one.timestamp,one.mark_price,color='green')
-
-        plt.plot(self.data.timestamp,self.data[col_name])
+        plt.scatter(two.timestamp,two.mark_price,color='yellow')
+                
         plt.show()
         
 
